@@ -9,6 +9,9 @@
 # also store the player's average plus minus score
 # along with their teammates' average plus minus score and their opponents' average plus minus score
 
+import os
+import pickle
+
 players = {}
 
 games = {}
@@ -54,20 +57,24 @@ def addGame():
     # add the game to the players dictionary and the player's plus minus score
     for i in range(5):
         player = players.get(team1[i], {"gameIDs": [], "plusminus": 0.0, "teammates": [], "opponents": []})
-        player["gameIDs"].append(gameIndex)
+        player["plusminus"] *= len(player["gameIDs"])
         player["plusminus"] += team1score
+        player["plusminus"] /= len(player["gameIDs"])+1
         player["teammates"] = player["teammates"] + team1
         player["opponents"] = player["opponents"] + team2
         # remove the player's id from the teammates list
         player["teammates"] = [x for x in player["teammates"] if x != team1[i]]
+        player["gameIDs"].append(gameIndex)
 
         Oppositeplayer = players.get(team2[i], {"gameIDs": [], "plusminus": 0.0, "teammates": [], "opponents": []})
-        Oppositeplayer["gameIDs"].append(gameIndex)
+        Oppositeplayer["plusminus"] *= len(Oppositeplayer["gameIDs"])
         Oppositeplayer["plusminus"] -= team1score
+        Oppositeplayer["plusminus"] /= len(Oppositeplayer["gameIDs"])+1
         Oppositeplayer["teammates"] = Oppositeplayer["teammates"] + team2
         Oppositeplayer["opponents"] = Oppositeplayer["opponents"] + team1
         # remove the player's id from the teammates list
         Oppositeplayer["teammates"] = [x for x in Oppositeplayer["teammates"] if x != team2[i]]
+        Oppositeplayer["gameIDs"].append(gameIndex)
 
         players.update({team1[i]: player})
         players.update({team2[i]: Oppositeplayer})
@@ -99,11 +106,34 @@ def printRow(strings, width):
         print("{:^{width}}".format(string, width=width), end=" |")
     print()
 
+def read_or_new_pickle(path, default):
+    if os.path.isfile(path):
+        with open(path, "rb") as f:
+            try:
+                return pickle.load(f)
+            except Exception: # so many things could go wrong, can't be more specific.
+                pass
+    with open(path, "wb") as f:
+        pickle.dump(default, f)
+    return default
+
+def write_pickle(path, obj):
+    with open(path, "wb") as f:
+        pickle.dump(obj, f)
 
 if __name__ == "__main__":
 
     # While loop to keep asking the user if they want to play a game at the end
     running = True
+
+    # load the save file
+    # get name of save file
+    fileStr = input("Enter the name of the session file (excluding .data): ") + ".data"
+    data = read_or_new_pickle(fileStr, {"players": {}, "games": {}, "gameIndex": 0})
+
+    players = data["players"]
+    games = data["games"]
+    gameIndex = data["gameIndex"]
 
     while (running):
         addGame()
@@ -121,6 +151,12 @@ if __name__ == "__main__":
         for i in range(gameIndex):
             game = games.get(i)
             printRow([str(i), str(game["team1score"]), str(game["team1"]), str(game["team2"])], 20)
+
+        # save the data
+        data["players"] = players
+        data["games"] = games
+        data["gameIndex"] = gameIndex
+        write_pickle(fileStr, data)
 
         # would you like to play another game?
         playAgain = input("Would you like to play another game? (y/n): ")
