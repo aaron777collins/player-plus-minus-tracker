@@ -121,6 +121,23 @@ def write_pickle(path, obj):
     with open(path, "wb") as f:
         pickle.dump(obj, f)
 
+def display_data():
+    global players, games, gameIndex
+    # display results
+    print("Players")
+    printRow(["Player", "Plus Minus", "Teammate Plus Minus", "Opponent Plus Minus"], 20)
+    for key in sorted(players.keys()):
+        player = players.get(key)
+        # print("Player " + str(key) + " has a plus minus of " + str(player["plusminus"]) + " and a teammate plus minus of " + str(getTeammatePlusMinus(key)) + " and an opponent plus minus of " + str(getOpponentPlusMinus(key)))
+        printRow([str(key), str(player["plusminus"]), str(getTeammatePlusMinus(key)), str(getOpponentPlusMinus(key))], 20)
+
+    # display games
+    print("Games")
+    printRow(["index", "Team 1 Score", "Team 1", "Team 2"], 20)
+    for i in range(gameIndex):
+        game = games.get(i)
+        printRow([str(i), str(game["team1score"]), str(game["team1"]), str(game["team2"])], 20)
+
 if __name__ == "__main__":
 
     # While loop to keep asking the user if they want to play a game at the end
@@ -135,22 +152,11 @@ if __name__ == "__main__":
     games = data["games"]
     gameIndex = data["gameIndex"]
 
+    display_data()
+
     while (running):
         addGame()
-        # display results
-        print("Players")
-        printRow(["Player", "Plus Minus", "Teammate Plus Minus", "Opponent Plus Minus"], 20)
-        for key in sorted(players.keys()):
-            player = players.get(key)
-            # print("Player " + str(key) + " has a plus minus of " + str(player["plusminus"]) + " and a teammate plus minus of " + str(getTeammatePlusMinus(key)) + " and an opponent plus minus of " + str(getOpponentPlusMinus(key)))
-            printRow([str(key), str(player["plusminus"]), str(getTeammatePlusMinus(key)), str(getOpponentPlusMinus(key))], 20)
-
-        # display games
-        print("Games")
-        printRow(["index", "Team 1 Score", "Team 1", "Team 2"], 20)
-        for i in range(gameIndex):
-            game = games.get(i)
-            printRow([str(i), str(game["team1score"]), str(game["team1"]), str(game["team2"])], 20)
+        display_data()
 
         # save the data
         data["players"] = players
